@@ -1,4 +1,4 @@
-# Retry writing the file after kernel reset
+# Create an updated Animal Run HTML with grass hidden and built-in sound effects (WebAudio).
 html = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,6 +27,7 @@ html = r"""<!DOCTYPE html>
     /* Controls */
     .controls{display:flex; flex-wrap:wrap; gap:8px; padding:10px; align-items:center}
     .controls input{border:2px solid #0002; border-radius:12px; padding:10px; font-size:14px}
+    .controls .toggle{display:flex; align-items:center; gap:6px; font-size:14px; padding:6px 10px; border-radius:999px; background:#f8fafc; border:2px solid #0002}
 
     /* Gallery */
     .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; padding:12px}
@@ -40,12 +41,13 @@ html = r"""<!DOCTYPE html>
     .arena{display:none}
     .arena.show{display:block}
     .stage{position:relative; border:3px solid #0002; border-radius:18px; overflow:hidden; min-height:480px;
+      /* Removed opaque grass: keep bright sky only for full animal visibility */
       background:
         radial-gradient(800px 300px at 50% 15%, #ffffff88, #0000 70%),
-        linear-gradient(#dff2ff 60%, var(--grass) 0);
+        linear-gradient(#dff2ff 0%, #bfe6ff 100%);
     }
-    .ground{position:absolute; inset:auto 0 0 0; height:40%;
-      background:repeating-linear-gradient(90deg,#7cc63a,#7cc63a 16px,#73ba35 16px,#73ba35 32px)}
+    /* Hide the ground so it doesn't cover the animals */
+    .ground{display:none}
     .fighter{position:absolute; bottom:120px; width:240px; height:240px; display:grid; place-items:center; filter:drop-shadow(0 12px 0 #0001)}
     .fighter img{width:100%; height:100%; object-fit:contain; border-radius:16px; background:#fff}
     .left{left:6%} .right{right:6%}
@@ -100,6 +102,9 @@ html = r"""<!DOCTYPE html>
       <button class="btn" id="addUrl">Add by URL</button>
       <input id="fileInput" type="file" accept="image/*" multiple />
       <span style="font-size:12px;opacity:.8">Tip: upload your photos, then click “Save as my defaults” to preload them next time.</span>
+      <span class="toggle" style="margin-left:auto">
+        <label><input type="checkbox" id="soundToggle" checked /> 🔊 Sound</label>
+      </span>
     </div>
 
     <section class="panel" id="galleryPanel">
@@ -123,6 +128,7 @@ html = r"""<!DOCTYPE html>
         <div class="fighter right idle" id="boxR"><img id="imgR" alt="right animal"/></div>
         <canvas class="layer" id="dust"></canvas>
         <canvas class="layer" id="sparks"></canvas>
+        <!-- ground element kept for structure but hidden via CSS -->
         <div class="ground"></div>
         <div class="cage" id="cage" style="display:none">
           <div class="bars"><div class="door"></div></div>
@@ -138,12 +144,11 @@ html = r"""<!DOCTYPE html>
 
   <script>
     // ---- PRELOAD YOUR REPO IMAGES HERE -------------------------------------
-    // Put your files in assets/animals/ (repo) and rename below to match exactly.
-    // Example direct path on GitHub Pages: /animal-run/assets/animals/lion.jpg
     const PRELOADED = [
       { name: 'Tiger',    src: 'assets/animals/Tiger.jpeg' },
       { name: 'Elephant', src: 'assets/animals/Elephant.jpeg' },
-      { name: 'Fox',    src: 'assets/animals/Fox.jpeg' }
+      { name: 'Fox',      src: 'assets/animals/Fox.jpeg' },
+      { name: 'Terex',      src: 'assets/animals/Terex.jpeg' }
     ];
     // ------------------------------------------------------------------------
 
@@ -164,8 +169,68 @@ html = r"""<!DOCTYPE html>
     const cage = document.getElementById('cage');
     const dust = document.getElementById('dust');
     const sparks = document.getElementById('sparks');
+    const soundToggle = document.getElementById('soundToggle');
     const dctx = dust.getContext('2d');
     const sctx = sparks.getContext('2d');
+
+    // --- Simple WebAudio sound engine ---------------------------------------
+    class Sound {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        document.addEventListener('click', () => this._ensure(), { once: true });
+      }
+      _ensure() {
+        if (!this.ctx) {
+          try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+          catch(_) { this.enabled = false; }
+        }
+      }
+      setEnabled(on){ this.enabled = !!on; }
+      now(){ return this.ctx ? this.ctx.currentTime : 0; }
+      _note({type='sine', freq=440, dur=0.15, gain=0.2, attack=0.005, decay=0.1, detune=0}){
+        if(!this.enabled) return;
+        this._ensure(); if(!this.ctx) return;
+        const t0 = this.now();
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = type; o.frequency.value = freq; o.detune.value = detune;
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(gain, t0 + attack);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + attack + decay + dur);
+        o.connect(g).connect(this.ctx.destination);
+        o.start(t0); o.stop(t0 + attack + decay + dur + 0.05);
+      }
+      _noise({dur=0.25, gain=0.25, type='white', lp=4000}){
+        if(!this.enabled) return;
+        this._ensure(); if(!this.ctx) return;
+        const t0 = this.now();
+        const bufferSize = Math.floor(this.ctx.sampleRate * dur);
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i=0;i<bufferSize;i++){
+          const w = Math.random()*2-1;
+          data[i] = type==='white'? w : data[i-1]*0.98 + w*0.02;
+        }
+        const src = this.ctx.createBufferSource();
+        src.buffer = buffer;
+
+        const filt = this.ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=lp;
+        const g = this.ctx.createGain(); g.gain.value = gain;
+
+        src.connect(filt).connect(g).connect(this.ctx.destination);
+        src.start(t0); src.stop(t0+dur);
+      }
+      // Public cues
+      tick(){ this._note({type:'square', freq:880, dur:0.05, gain:0.12}); }
+      go(){ this._note({type:'triangle', freq:523.25, dur:0.25, gain:0.25}); }
+      door(){ this._note({type:'sawtooth', freq:140, dur:0.4, gain:0.2}); }
+      run(){ this._noise({dur:0.20, gain:0.18, type:'brown', lp:1200}); }
+      hit(){ this._noise({dur:0.18, gain:0.22, type:'white', lp:2200}); this._note({type:'triangle', freq:220, dur:0.12, gain:0.18}); }
+      win(){ this._note({type:'sine', freq:659.25, dur:0.18, gain:0.22}); setTimeout(()=>this._note({type:'sine', freq:783.99, dur:0.22, gain:0.22}),120); setTimeout(()=>this._note({type:'sine', freq:987.77, dur:0.30, gain:0.22}),260); }
+    }
+    const S = new Sound();
+    soundToggle.addEventListener('change', e=> S.setEnabled(e.target.checked));
 
     // State
     let animals = [];
@@ -191,7 +256,7 @@ html = r"""<!DOCTYPE html>
     fileInput.addEventListener('change',e=>{
       const files=[...e.target.files];
       files.forEach(f=>{ if(!f.type.startsWith('image/'))return; const r=new FileReader();
-        r.onload=()=> addAnimal(r.result, f.name.replace(/\.[^.]+$/, '')); r.readAsDataURL(f); });
+        r.onload=()=> addAnimal(r.result, f.name.replace(/\\.[^.]+$/, '')); r.readAsDataURL(f); });
       fileInput.value='';
     });
 
@@ -213,6 +278,8 @@ html = r"""<!DOCTYPE html>
       hpLeft.style.width='100%'; hpRight.style.width='100%';
       log.textContent = `${p.name} is trapped in a cage…`;
 
+      // SFX: door
+      S.door();
       cage.style.display='grid'; // show cage
       setTimeout(()=> cage.classList.add('open'), 700); // open door
       setTimeout(()=>{ // remove cage and run out
@@ -223,7 +290,14 @@ html = r"""<!DOCTYPE html>
 
     function countdown(done){
       countdownEl.style.display='grid'; let n=3; countdownEl.textContent=n;
-      const t=setInterval(()=>{ n--; if(n>0) countdownEl.textContent=n; else { countdownEl.textContent='Go!'; setTimeout(()=>{ countdownEl.style.display='none'; clearInterval(t); done(); },550);} },650);
+      const t=setInterval(()=>{
+        n--;
+        if(n>0){ countdownEl.textContent=n; S.tick(); }
+        else {
+          countdownEl.textContent='Go!'; S.go();
+          setTimeout(()=>{ countdownEl.style.display='none'; clearInterval(t); done(); },550);
+        }
+      },650);
     }
 
     function startFight(p,o){
@@ -232,12 +306,14 @@ html = r"""<!DOCTYPE html>
       const tick=setInterval(()=>{
         const dmg = 8+Math.floor(Math.random()*13);
         if(turn===0){
-          charge(boxL,'L'); impactSparks(); R=Math.max(0,R-dmg); hpRight.style.width=R+'%'; log.textContent=`${p.name} hits ${o.name} for ${dmg}!`;
+          charge(boxL,'L'); impactSparks(); S.hit();
+          R=Math.max(0,R-dmg); hpRight.style.width=R+'%'; log.textContent=`${p.name} hits ${o.name} for ${dmg}!`;
         }else{
-          charge(boxR,'R'); impactSparks(); L=Math.max(0,L-dmg); hpLeft.style.width=L+'%'; log.textContent=`${o.name} hits ${p.name} for ${dmg}!`;
+          charge(boxR,'R'); impactSparks(); S.hit();
+          L=Math.max(0,L-dmg); hpLeft.style.width=L+'%'; log.textContent=`${o.name} hits ${p.name} for ${dmg}!`;
         }
         if(L===0||R===0){ clearInterval(tick); const winner = R===0&&L>0? p : (L===0&&R>0? o : (Math.random()<.5?p:o));
-          log.textContent = `🏆 ${winner.name} wins!`; document.getElementById('playAgain').style.display='inline-block'; }
+          log.textContent = `🏆 ${winner.name} wins!`; S.win(); document.getElementById('playAgain').style.display='inline-block'; }
         else{ turn = 1 - turn; }
       }, 1100);
     }
@@ -253,6 +329,8 @@ html = r"""<!DOCTYPE html>
         if(t++<50) requestAnimationFrame(dustTick);
       };
       dustTick();
+      // SFX: footstep/dust
+      S.run();
       node.style.animation = (dir==='L'? 'runL':'runR') + ' 700ms ease';
       setTimeout(()=>{ node.style.animation='bob 1.1s ease-in-out infinite'; done&&done(); },720);
     }
