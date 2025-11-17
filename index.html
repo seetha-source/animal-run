@@ -3,119 +3,67 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Animal Cage Escape — Mini Game</title>
+  <title>Animal Battle — Minimal</title>
   <style>
     :root{
-      --bg:#0f172a;          /* slate-900 */
-      --panel:#111827;       /* gray-900 */
-      --muted:#94a3b8;       /* slate-400 */
-      --text:#e5e7eb;        /* gray-200 */
-      --accent:#22d3ee;      /* cyan-400 */
-      --win:#22c55e;         /* green-500 */
-      --lose:#ef4444;        /* red-500 */
-      --warn:#f59e0b;        /* amber-500 */
+      --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb; --win:#22c55e; --lose:#ef4444;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif;
-      background:radial-gradient(1000px 500px at 80% -10%, #1e293b, transparent), var(--bg);
-      color:var(--text);
-      display:flex; align-items:stretch; justify-content:center;
-    }
-
-    .container{width:min(1100px,100%); padding:18px; display:flex; flex-direction:column; gap:16px}
-    header{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between}
-    h1{font-size:clamp(20px,3vw,28px); margin:0; letter-spacing:0.3px}
-    .subtitle{font-size:13px; color:var(--muted)}
-
-    .panel{background:linear-gradient(180deg,#0b1220,#0b1220cc); border:1px solid #1f2937; border-radius:16px; box-shadow:0 10px 30px #0003;}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif; background:var(--bg); color:var(--text);}
+    .container{max-width:1000px; margin:auto; padding:16px; display:flex; flex-direction:column; gap:12px}
+    h1{margin:0 0 4px; font-size:22px}
+    .panel{background:#0b1220; border:1px solid #1f2937; border-radius:14px}
 
     /* Controls */
-    .controls{display:flex; flex-wrap:wrap; gap:10px; padding:14px}
-    .controls > *{background:var(--panel); border:1px solid #1f2937; padding:10px 12px; border-radius:12px}
-    .controls input[type="text"], .controls input[type="url"]{min-width:240px; background:#0b1220; color:var(--text); border:none; outline:none}
-    .btn{cursor:pointer; background:#0d1b2a; color:var(--text); border:1px solid #1f2937; border-radius:12px; padding:10px 14px; transition:transform .06s ease, box-shadow .2s ease}
-    .btn:hover{transform:translateY(-1px)}
-    .btn.primary{background:linear-gradient(180deg,#0ea5e9,#0891b2); border-color:#0ea5e9}
-    .btn.ghost{background:transparent}
+    .controls{display:flex; gap:10px; flex-wrap:wrap; padding:10px}
+    .controls input{background:#0b1220; border:1px solid #1f2937; color:var(--text); border-radius:10px; padding:8px 10px}
+    .btn{cursor:pointer; background:#0d1b2a; color:var(--text); border:1px solid #1f2937; border-radius:10px; padding:8px 12px}
 
     /* Gallery */
-    .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; padding:14px}
-    .card{position:relative; border:1px solid #1f2937; border-radius:16px; overflow:hidden; background:#0b1220; cursor:pointer; isolation:isolate}
-    .thumb{aspect-ratio:1/1; width:100%; background:#111; background-size:cover; background-position:center}
-    .label{display:flex; align-items:center; justify-content:space-between; gap:6px; padding:8px 10px; font-size:13px; color:var(--muted)}
-    .small{font-size:12px; color:var(--muted)}
-    .badge{font-size:11px; color:#0f172a; background:var(--accent); padding:2px 8px; border-radius:999px}
+    .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; padding:10px}
+    .card{border:1px solid #1f2937; border-radius:12px; overflow:hidden; background:#0b1220; cursor:pointer}
+    .thumb{aspect-ratio:1/1; width:100%; background:#111 center/cover no-repeat}
+    .label{padding:8px 10px; font-size:13px; color:var(--muted)}
 
     /* Arena */
-    .arena{display:none; position:relative; padding:14px;}
+    .arena{display:none; padding:10px}
     .arena.show{display:block}
-    .stage{position:relative; min-height:320px; border:1px solid #1f2937; border-radius:16px; background:
-      radial-gradient(80% 60% at 50% 100%, #0a0f1a, transparent 70%),
-      linear-gradient(0deg,#0b1324,#0b1324); overflow:hidden}
-    .ground{position:absolute; inset:auto 0 0 0; height:40%; background:repeating-linear-gradient(90deg,#0d1b2a,#0d1b2a 14px,#0c1622 14px,#0c1622 28px); border-top:1px solid #1f2937}
-
-    .fighter{position:absolute; bottom:18%; width:140px; aspect-ratio:1; border-radius:14px; background:#111 center/cover no-repeat; box-shadow:0 12px 24px #0006; filter:saturate(1.1)}
+    .stage{position:relative; min-height:320px; border:1px solid #1f2937; border-radius:12px; background:#0b1324; overflow:hidden}
+    .fighter{position:absolute; bottom:12px; width:160px; aspect-ratio:1; background:#111 center/cover no-repeat; border-radius:12px}
     .fighter.left{left:8%}
-    .fighter.right{right:8%; transform:scaleX(-1)}
+    .fighter.right{right:8%}
 
     .hpbar{position:absolute; top:10px; width:44%; height:10px; background:#0c1422; border:1px solid #1f2937; border-radius:999px; overflow:hidden}
     .hpbar.left{left:10px}
     .hpbar.right{right:10px}
     .hp{height:100%; width:100%; background:linear-gradient(90deg,var(--win),#a3e635)}
 
-    .log{margin-top:12px; padding:10px; border:1px solid #1f2937; border-radius:12px; min-height:44px; color:var(--muted); font-size:14px; max-height:120px; overflow:auto}
+    .log{margin-top:10px; padding:8px 10px; border:1px solid #1f2937; border-radius:10px; min-height:44px; color:var(--muted); font-size:14px; max-height:130px; overflow:auto}
 
-    /* Cage overlay */
-    .cage{position:absolute; inset:0; display:grid; place-items:center; background:#00000055; backdrop-filter:blur(1px);}
-    .bars{position:relative; width:70%; height:70%; border-radius:16px; background:repeating-linear-gradient(90deg, #232b3a 0 10px, transparent 10px 30px); border:2px solid #374151; box-shadow:inset 0 0 0 2px #0b1220}
-    .door{position:absolute; inset:0; border-radius:16px; background:linear-gradient(180deg,#1f2937,#111827); border-left:3px solid #94a3b8; transform-origin:left;}
-    .cage.open .door{animation:door 1.5s ease forwards}
-    @keyframes door{to{transform:perspective(600px) rotateY(70deg) translateX(-6%); opacity:.1}}
-
-    /* Floating text */
-    .float{position:absolute; font-weight:700; pointer-events:none; animation:float 900ms ease forwards}
-    @keyframes float{to{transform:translateY(-30px); opacity:0}}
-
-    /* Footer */
-    footer{font-size:12px; color:var(--muted); text-align:center; padding:4px 0 10px}
-
-    /* Responsive tweaks */
-    @media (max-width:640px){
-      .fighter{width:120px}
-      .ground{height:46%}
-    }
+    footer{font-size:12px; color:var(--muted); text-align:center; padding:6px 0 10px}
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <div>
-        <h1>🐾 Animal Cage Escape — Mini Game</h1>
-        <div class="subtitle">Add your own animal images, pick a fighter, watch it escape, and battle!</div>
-      </div>
-      <button class="btn ghost" id="resetAll">Reset</button>
+      <h1>🐾 Animal Battle — Minimal</h1>
+      <div style="font-size:13px; color:var(--muted)">Preloaded animals. No cage or effects. Super lightweight.</div>
     </header>
 
     <!-- Controls -->
-    <div class="panel controls" aria-label="add-images">
-      <div>
+    <div class="panel controls">
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
         <input id="nameInput" type="text" placeholder="Animal name (optional)" />
         <input id="urlInput" type="url" placeholder="Paste image URL (HTTPS)" />
         <button class="btn" id="addUrl">Add by URL</button>
-      </div>
-      <div>
         <input id="fileInput" type="file" accept="image/*" multiple />
-        <span class="small">or drop images anywhere</span>
       </div>
-      <button class="btn primary" id="startHint">How to Play</button>
+      <button class="btn" id="resetAll">Reset</button>
     </div>
 
     <!-- Gallery -->
     <section class="panel" id="galleryPanel">
-      <div class="label" style="border-bottom:1px solid #1f2937"><span>Choose your animal</span><span class="badge" id="countBadge">0</span></div>
       <div class="gallery" id="gallery"></div>
     </section>
 
@@ -126,22 +74,20 @@
         <div class="hpbar right" aria-hidden="true"><div class="hp" id="hpRight"></div></div>
         <div class="fighter left" id="fighterLeft"></div>
         <div class="fighter right" id="fighterRight"></div>
-        <div class="ground"></div>
       </div>
-      <div class="log" id="log">Pick an animal to begin…</div>
-      <div style="display:flex; gap:8px; padding:10px 0">
+      <div class="log" id="log">Pick an animal to fight…</div>
+      <div style="display:flex; gap:8px; padding:8px 0">
         <button class="btn" id="playAgain" style="display:none">Play again</button>
         <button class="btn" id="backToGallery" style="display:none">Back to gallery</button>
       </div>
     </section>
 
-    <footer>100% client‑side • single file • no libraries • drag & drop supported</footer>
+    <footer>Single file • No libraries • Works on GitHub Pages</footer>
   </div>
 
   <script>
     // --- State ---
     const gallery = document.getElementById('gallery');
-    const countBadge = document.getElementById('countBadge');
     const arena = document.getElementById('arena');
     const stage = document.getElementById('stage');
     const fighterLeft = document.getElementById('fighterLeft');
@@ -150,213 +96,96 @@
     const hpRight = document.getElementById('hpRight');
     const log = document.getElementById('log');
 
-    let animals = []; // {name, src}
+    let animals = [];// {name, src}
 
     // --- Utilities ---
-    const el = (tag, attrs={}, ...children)=>{
-      const n = document.createElement(tag);
-      Object.entries(attrs).forEach(([k,v])=>{
-        if(k==="style" && typeof v==="object") Object.assign(n.style,v); else if(k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k,v);
-      });
-      children.flat().forEach(c=> n.appendChild(typeof c==="string"? document.createTextNode(c): c));
-      return n;
-    };
+    const el = (tag, attrs={}, ...children)=>{ const n=document.createElement(tag); Object.entries(attrs).forEach(([k,v])=>{ if(k=="style"&&typeof v=="object") Object.assign(n.style,v); else if(k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k,v);}); children.flat().forEach(c=> n.appendChild(typeof c==="string"? document.createTextNode(c): c)); return n; };
 
-    function updateCount(){ countBadge.textContent = String(animals.length); }
-
-    function addAnimal(src, name){
-      const label = name?.trim() || inferNameFromSrc(src);
-      animals.push({name:label, src});
-      renderGallery();
-    }
-
-    function inferNameFromSrc(src){
-      try{
-        const u = new URL(src);
-        const file = u.pathname.split('/').pop();
-        return file?.split('.')?.[0]?.replace(/[-_]/g,' ') || 'Animal';
-      }catch{ return 'Animal'; }
-    }
+    function addAnimal(src, name){ animals.push({name: name?.trim() || inferName(src), src}); renderGallery(); }
+    function inferName(src){ try{ const u=new URL(src); const f=u.pathname.split('/').pop(); return (f?.split('.')?.[0]||'Animal').replace(/[-_]/g,' ');}catch{ return 'Animal'; } }
 
     function renderGallery(){
-      gallery.innerHTML = '';
-      animals.forEach((a, idx)=>{
-        const card = el('button', { class:'card', title:`Select ${a.name}`, onclick:()=> selectAnimal(idx) },
-          el('div', { class:'thumb', style:{ backgroundImage:`url(${a.src})` } }),
-          el('div', { class:'label' },
-            el('span', {}, a.name),
-            el('span', { class:'badge' }, 'Select')
-          )
+      gallery.innerHTML='';
+      animals.forEach((a,i)=>{
+        const card = el('button',{class:'card', onclick:()=> selectAnimal(i)},
+          el('div',{class:'thumb', style:{backgroundImage:`url(${a.src})`}}),
+          el('div',{class:'label'}, a.name)
         );
         gallery.appendChild(card);
       });
-      updateCount();
     }
 
-    // --- Add by URL ---
-    document.getElementById('addUrl').addEventListener('click', ()=>{
-      const url = document.getElementById('urlInput').value.trim();
-      const name = document.getElementById('nameInput').value.trim();
+    // --- Add by URL / File ---
+    document.getElementById('addUrl').addEventListener('click',()=>{
+      const url=document.getElementById('urlInput').value.trim();
+      const name=document.getElementById('nameInput').value.trim();
       if(!url) return alert('Paste an image URL first.');
-      addAnimal(url, name || undefined);
+      addAnimal(url, name||undefined);
       document.getElementById('urlInput').value='';
       document.getElementById('nameInput').value='';
     });
-
-    // --- Add by File(s) ---
-    const fileInput = document.getElementById('fileInput');
+    const fileInput=document.getElementById('fileInput');
     fileInput.addEventListener('change', handleFiles);
-    window.addEventListener('dragover', e=>{ e.preventDefault(); });
-    window.addEventListener('drop', e=>{ e.preventDefault(); handleFiles({ target:{ files: e.dataTransfer.files }}); });
-
     function handleFiles(e){
-      const files = Array.from(e.target.files || []);
-      files.forEach(f=>{
-        if(!f.type.startsWith('image/')) return;
-        const reader = new FileReader();
-        reader.onload = ()=> addAnimal(reader.result, f.name.replace(/\.[^.]+$/, ''));
-        reader.readAsDataURL(f);
-      });
-      fileInput.value = '';
+      const files=Array.from(e.target.files||[]);
+      files.forEach(f=>{ if(!f.type.startsWith('image/')) return; const r=new FileReader(); r.onload=()=> addAnimal(r.result, f.name.replace(/\.[^.]+$/, '')); r.readAsDataURL(f); });
+      fileInput.value='';
     }
 
-    // --- Game Flow ---
+    // --- Game (minimal) ---
     function selectAnimal(index){
-      if(animals.length < 2){
-        alert('Add at least two animals so there is an opponent.');
-        return;
-      }
-      const player = animals[index];
-      let opponentIndex = index;
-      while(opponentIndex === index) opponentIndex = Math.floor(Math.random()*animals.length);
-      const opponent = animals[opponentIndex];
+      if(animals.length<2){ alert('Add at least two animals.'); return; }
+      const p=animals[index];
+      let j=index; while(j===index) j=Math.floor(Math.random()*animals.length);
+      const o=animals[j];
 
-      // Setup arena
+      // Setup arena immediately (no cage/effects)
       document.getElementById('galleryPanel').style.display='none';
       arena.classList.add('show');
-      log.textContent = `${player.name} is trapped in a cage…`;
-
-      fighterLeft.style.backgroundImage = `url(${player.src})`;
-      fighterRight.style.backgroundImage = `url(${opponent.src})`;
-      hpLeft.style.width = '100%';
-      hpRight.style.width = '100%';
-
-      // Cage overlay on player
-      const cage = el('div',{class:'cage', id:'cage'},
-        el('div',{class:'bars'}, el('div',{class:'door'}))
-      );
-      stage.appendChild(cage);
-
-      // Escape sequence
-      setTimeout(()=>{
-        cage.classList.add('open');
-        log.textContent = `${player.name} breaks out!`;
-        flashText(fighterLeft, 'ESCAPE!', 'var(--accent)');
-      }, 900);
-
-      setTimeout(()=>{
-        cage.remove();
-        startFight(player, opponent);
-      }, 2400);
+      fighterLeft.style.backgroundImage=`url(${p.src})`;
+      fighterRight.style.backgroundImage=`url(${o.src})`;
+      hpLeft.style.width='100%'; hpRight.style.width='100%';
+      startFight(p,o);
     }
 
-    function startFight(p, o){
-      log.innerHTML = `<b>${p.name}</b> vs <b>${o.name}</b> — Fight!`;
-      let hpL = 100, hpR = 100;
-      const tick = setInterval(()=>{
-        // Random turn: 0 -> left attacks, 1 -> right attacks
-        const turn = Math.random() < 0.5 ? 'L' : 'R';
-        const dmg = Math.floor(8 + Math.random()*12); // 8–20
-        if(turn==='L'){ hpR = Math.max(0, hpR - dmg); hpRight.style.width = hpR + '%';
-          bump(fighterLeft); flashText(fighterRight, `-${dmg}`, 'var(--lose)'); write(`${p.name} hits ${o.name} for ${dmg}.`);
-        } else { hpL = Math.max(0, hpL - dmg); hpLeft.style.width = hpL + '%';
-          bump(fighterRight); flashText(fighterLeft, `-${dmg}`, 'var(--lose)'); write(`${o.name} strikes ${p.name} for ${dmg}.`);
-        }
-        if(hpL===0 || hpR===0){
-          clearInterval(tick);
-          const playerWon = hpR===0 && hpL>0;
-          const winner = playerWon ? p : (hpL===0 && hpR>0 ? o : (Math.random()<0.5? p : o));
-          write(`🏆 ${winner.name} wins!`);
-          flashText(winner===p?fighterLeft:fighterRight, 'WINNER', 'var(--win)');
-          document.getElementById('playAgain').style.display='inline-block';
-          document.getElementById('backToGallery').style.display='inline-block';
-        }
+    function startFight(p,o){
+      log.textContent = `${p.name} vs ${o.name} — Fight!`;
+      let L=100, R=100;
+      const tick=setInterval(()=>{
+        const leftAttacks = Math.random()<0.5;
+        const dmg = 8+Math.floor(Math.random()*13); // 8–20
+        if(leftAttacks){ R=Math.max(0,R-dmg); hpRight.style.width=R+'%'; log.append(`
+${p.name} hits ${o.name} for ${dmg}.`); }
+        else { L=Math.max(0,L-dmg); hpLeft.style.width=L+'%'; log.append(`
+${o.name} strikes ${p.name} for ${dmg}.`); }
+        if(L===0||R===0){ clearInterval(tick); const winner = R===0&&L>0 ? p : (L===0&&R>0 ? o : (Math.random()<0.5?p:o)); log.append(`
+🏆 ${winner.name} wins!`); document.getElementById('playAgain').style.display='inline-block'; document.getElementById('backToGallery').style.display='inline-block'; }
       }, 800);
     }
 
-    function write(t){
-      const line = document.createElement('div');
-      line.textContent = t;
-      log.appendChild(line);
-      log.scrollTop = log.scrollHeight;
-    }
-
-    function bump(node){
-      node.animate([
-        { transform: node.classList.contains('right')? 'scaleX(-1) translateY(0)' : 'translateY(0)' },
-        { transform: (node.classList.contains('right')? 'scaleX(-1) ' : '') + 'translateY(-6px)' },
-        { transform: node.classList.contains('right')? 'scaleX(-1) translateY(0)' : 'translateY(0)' }
-      ], { duration: 280, easing:'cubic-bezier(.18,.72,.25,1)' });
-    }
-
-    function flashText(anchor, text, color){
-      const r = anchor.getBoundingClientRect();
-      const f = el('div',{class:'float', style:{left: (r.left + r.width/2) + 'px', top:(r.top - 6 + window.scrollY) + 'px', color: `var(--text)`}}, text);
-      document.body.appendChild(f);
-      f.style.color = color;
-      f.style.transform = 'translate(-50%,0)';
-      f.addEventListener('animationend', ()=> f.remove());
-    }
-
     // Buttons
-    document.getElementById('playAgain').addEventListener('click', ()=>{
-      log.textContent = 'Pick another animal to begin…';
-      document.getElementById('playAgain').style.display='none';
-      document.getElementById('backToGallery').style.display='none';
-      arena.classList.remove('show');
-      document.getElementById('galleryPanel').style.display='block';
-    });
+    document.getElementById('playAgain').addEventListener('click',()=>{ log.textContent='Pick an animal to fight…'; document.getElementById('playAgain').style.display='none'; document.getElementById('backToGallery').style.display='none'; arena.classList.remove('show'); document.getElementById('galleryPanel').style.display='block'; });
+    document.getElementById('backToGallery').addEventListener('click',()=>{ document.getElementById('playAgain').click(); });
+    document.getElementById('resetAll').addEventListener('click',()=>{ if(confirm('Clear all animals and reload defaults?')){ animals=[]; preload(); }});
 
-    document.getElementById('backToGallery').addEventListener('click', ()=>{
-      document.getElementById('playAgain').click();
-    });
+    // --- Preloaded animals (built-in SVGs so it works offline & on GitHub Pages) ---
+    function svg(text, color){ return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0' stop-color='${color}' stop-opacity='.85'/><stop offset='1' stop-color='${color}' stop-opacity='.45'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><text x='50%' y='54%' text-anchor='middle' font-family='Segoe UI,Arial' font-size='64' fill='white' opacity='.98' font-weight='700'>${text}</text></svg>`)}`; }
 
-    document.getElementById('resetAll').addEventListener('click', ()=>{
-      if(confirm('Clear all added animals?')){
-        animals = []; renderGallery();
-        arena.classList.remove('show');
-        document.getElementById('galleryPanel').style.display='block';
-        log.textContent = 'Pick an animal to begin…';
-      }
-    });
-
-    document.getElementById('startHint').addEventListener('click', ()=>{
-      alert(`HOW TO PLAY\n\n1) Add images: paste an image URL or use the file picker / drag & drop.\n2) Click an animal card to select your fighter.\n3) Watch it break out of the cage and battle a random opponent!\n4) Use Play again to retry or Back to gallery to choose another.\n\nTip: You can rename animals using the name field before you add them.`);
-    });
-
-    // Demo placeholders to show layout (can be removed)
-    ;(function demoPlaceholders(){
-      const placeholders = [
-        'data:image/svg+xml;utf8,'+encodeURIComponent(svg('Lion','#F59E0B')),
-        'data:image/svg+xml;utf8,'+encodeURIComponent(svg('Tiger','#EF4444')),
-        'data:image/svg+xml;utf8,'+encodeURIComponent(svg('Bear','#22C55E')),
-        'data:image/svg+xml;utf8,'+encodeURIComponent(svg('Wolf','#60A5FA')),
+    function preload(){
+      const defaults=[
+        {name:'Lion', src: svg('Lion','#f59e0b')},
+        {name:'Tiger', src: svg('Tiger','#ef4444')},
+        {name:'Bear', src: svg('Bear','#22c55e')},
+        {name:'Wolf', src: svg('Wolf','#60a5fa')},
+        {name:'Elephant', src: svg('Elephant','#a78bfa')},
+        {name:'Horse', src: svg('Horse','#f472b6')}
       ];
-      placeholders.forEach((src,i)=> addAnimal(src, ['Lion','Tiger','Bear','Wolf'][i]));
-    })();
-
-    function svg(text, color){
-      return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>
-        <defs>
-          <linearGradient id='g' x1='0' x2='0' y1='0' y2='1'>
-            <stop offset='0' stop-color='${color}' stop-opacity='.8'/>
-            <stop offset='1' stop-color='${color}' stop-opacity='.35'/>
-          </linearGradient>
-        </defs>
-        <rect width='100%' height='100%' fill='url(#g)'/>
-        <text x='50%' y='54%' text-anchor='middle' font-family='Segoe UI,Arial' font-size='64' fill='white' opacity='.95' font-weight='700'>${text}</text>
-      </svg>`;
+      animals = defaults.slice();
+      renderGallery();
     }
+
+    // init
+    preload();
   </script>
 </body>
 </html>
