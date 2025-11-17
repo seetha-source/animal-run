@@ -3,63 +3,83 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Animal Battle — Minimal</title>
+  <title>Animal Battle — Kids Edition</title>
   <style>
     :root{
-      --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb; --win:#22c55e; --lose:#ef4444;
+      --bg:#0ea5e9;        /* sky */
+      --grass:#86efac;     /* grass */
+      --panel:#ffffff;     /* cards */
+      --ink:#0f172a;       /* text */
+      --muted:#475569;     /* muted */
+      --red:#ef4444; --green:#22c55e; --yellow:#f59e0b; --purple:#a78bfa; --blue:#60a5fa;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif; background:var(--bg); color:var(--text);}
-    .container{max-width:1000px; margin:auto; padding:16px; display:flex; flex-direction:column; gap:12px}
-    h1{margin:0 0 4px; font-size:22px}
-    .panel{background:#0b1220; border:1px solid #1f2937; border-radius:14px}
+    body{margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Inter, Arial, sans-serif; background:linear-gradient(#dbeafe,var(--bg)); color:var(--ink)}
+    .container{max-width:1100px; margin:auto; padding:16px; display:flex; flex-direction:column; gap:14px}
+    h1{margin:0; font-size:28px; display:flex; align-items:center; gap:8px}
+    .tag{font-size:12px; color:#0f172a; background:#fff8; border:2px solid #0002; padding:2px 8px; border-radius:999px}
 
     /* Controls */
-    .controls{display:flex; gap:10px; flex-wrap:wrap; padding:10px}
-    .controls input{background:#0b1220; border:1px solid #1f2937; color:var(--text); border-radius:10px; padding:8px 10px}
-    .btn{cursor:pointer; background:#0d1b2a; color:var(--text); border:1px solid #1f2937; border-radius:10px; padding:8px 12px}
+    .controls{background:#fff; border:3px solid #0002; border-radius:16px; padding:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    .controls input{border:2px solid #0002; border-radius:12px; padding:10px; font-size:14px}
+    .btn{cursor:pointer; border:2px solid #0003; border-radius:12px; padding:10px 14px; background:#ffd166; font-weight:700}
 
     /* Gallery */
-    .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; padding:10px}
-    .card{border:1px solid #1f2937; border-radius:12px; overflow:hidden; background:#0b1220; cursor:pointer}
-    .thumb{aspect-ratio:1/1; width:100%; background:#111 center/cover no-repeat}
-    .label{padding:8px 10px; font-size:13px; color:var(--muted)}
+    .panel{background:#fff; border:3px solid #0002; border-radius:18px}
+    .gallery{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:12px; padding:12px}
+    .card{background:var(--panel); border:3px solid #0002; border-radius:16px; padding:8px; cursor:pointer; transition:transform .08s ease}
+    .card:hover{transform:translateY(-2px)}
+    .thumb{width:100%; aspect-ratio:1/1; background:#fff; border-radius:12px; display:grid; place-items:center}
+    .thumb img{width:88%; height:88%; object-fit:contain}
+    .label{margin-top:6px; text-align:center; font-weight:700}
 
     /* Arena */
-    .arena{display:none; padding:10px}
+    .arena{display:none}
     .arena.show{display:block}
-    .stage{position:relative; min-height:320px; border:1px solid #1f2937; border-radius:12px; background:#0b1324; overflow:hidden}
-    .fighter{position:absolute; bottom:12px; width:160px; aspect-ratio:1; background:#111 center/cover no-repeat; border-radius:12px}
+    .stage-wrap{position:relative; padding:10px}
+    .stage{position:relative; border:3px solid #0002; border-radius:18px; overflow:hidden; min-height:360px; background:linear-gradient(#dbeafe 60%, var(--grass) 0)}
+    .fighter{position:absolute; bottom:70px; width:180px; height:180px; display:grid; place-items:center; animation:idle 1.2s ease-in-out infinite}
     .fighter.left{left:8%}
     .fighter.right{right:8%}
+    .fighter img{width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 8px 0 #0001)}
 
-    .hpbar{position:absolute; top:10px; width:44%; height:10px; background:#0c1422; border:1px solid #1f2937; border-radius:999px; overflow:hidden}
-    .hpbar.left{left:10px}
-    .hpbar.right{right:10px}
-    .hp{height:100%; width:100%; background:linear-gradient(90deg,var(--win),#a3e635)}
+    @keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes dashL{0%{transform:translateX(0)}60%{transform:translateX(40px)}100%{transform:translateX(0)}}
+    @keyframes dashR{0%{transform:translateX(0)}60%{transform:translateX(-40px)}100%{transform:translateX(0)}}
+    @keyframes hit{0%{transform:rotate(0)}30%{transform:rotate(-10deg)}70%{transform:rotate(8deg)}100%{transform:rotate(0)}}
 
-    .log{margin-top:10px; padding:8px 10px; border:1px solid #1f2937; border-radius:10px; min-height:44px; color:var(--muted); font-size:14px; max-height:130px; overflow:auto}
+    .hpbar{position:absolute; top:12px; width:42%; height:14px; background:#fff; border:3px solid #0002; border-radius:999px; overflow:hidden}
+    .hpbar.left{left:12px}
+    .hpbar.right{right:12px}
+    .hp{height:100%; width:100%}
+    .hp.left{background:linear-gradient(90deg,var(--green),#bbf7d0)}
+    .hp.right{background:linear-gradient(90deg,var(--red),#fecaca)}
 
-    footer{font-size:12px; color:var(--muted); text-align:center; padding:6px 0 10px}
+    .vs{position:absolute; top:8px; left:50%; transform:translateX(-50%); background:#fff; border:3px solid #0002; padding:4px 10px; border-radius:999px; font-weight:900}
+
+    .log{margin:8px 0 0; padding:10px; background:#fff; border:3px solid #0002; border-radius:14px; min-height:44px}
+
+    /* Countdown */
+    .count{position:absolute; inset:0; display:grid; place-items:center; font-size:110px; font-weight:900; color:#0008; text-shadow:0 4px 0 #fff}
+
+    /* Confetti */
+    .confetti{position:absolute; inset:0; pointer-events:none}
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>🐾 Animal Battle — Minimal</h1>
-      <div style="font-size:13px; color:var(--muted)">Preloaded animals. No cage or effects. Super lightweight.</div>
+    <header style="display:flex; align-items:center; justify-content:space-between">
+      <h1>🐯 Animal Battle — <span class="tag">Kids Edition</span></h1>
+      <button class="btn" id="goHome" style="display:none">Back to Gallery</button>
     </header>
 
-    <!-- Controls -->
-    <div class="panel controls">
-      <div style="display:flex; gap:8px; flex-wrap:wrap">
-        <input id="nameInput" type="text" placeholder="Animal name (optional)" />
-        <input id="urlInput" type="url" placeholder="Paste image URL (HTTPS)" />
-        <button class="btn" id="addUrl">Add by URL</button>
-        <input id="fileInput" type="file" accept="image/*" multiple />
-      </div>
-      <button class="btn" id="resetAll">Reset</button>
+    <div class="controls">
+      <input id="nameInput" type="text" placeholder="Animal name (optional)" />
+      <input id="urlInput" type="url" placeholder="Paste image URL (HTTPS)" />
+      <button class="btn" id="addUrl">Add by URL</button>
+      <input id="fileInput" type="file" accept="image/*" multiple />
+      <span style="font-size:12px;color:var(--muted)">or drag & drop images</span>
     </div>
 
     <!-- Gallery -->
@@ -68,37 +88,40 @@
     </section>
 
     <!-- Arena -->
-    <section class="panel arena" id="arena" aria-live="polite">
-      <div class="stage" id="stage">
-        <div class="hpbar left" aria-hidden="true"><div class="hp" id="hpLeft"></div></div>
-        <div class="hpbar right" aria-hidden="true"><div class="hp" id="hpRight"></div></div>
-        <div class="fighter left" id="fighterLeft"></div>
-        <div class="fighter right" id="fighterRight"></div>
-      </div>
-      <div class="log" id="log">Pick an animal to fight…</div>
-      <div style="display:flex; gap:8px; padding:8px 0">
-        <button class="btn" id="playAgain" style="display:none">Play again</button>
-        <button class="btn" id="backToGallery" style="display:none">Back to gallery</button>
+    <section class="arena" id="arena">
+      <div class="stage-wrap">
+        <div class="stage" id="stage">
+          <div class="hpbar left"><div class="hp left" id="hpLeft"></div></div>
+          <div class="hpbar right"><div class="hp right" id="hpRight"></div></div>
+          <div class="vs">VS</div>
+          <div class="fighter left" id="fighterLeft"><img alt="left animal"/></div>
+          <div class="fighter right" id="fighterRight"><img alt="right animal"/></div>
+          <canvas class="confetti" id="confetti"></canvas>
+          <div class="count" id="countdown" style="display:none">3</div>
+        </div>
+        <div class="log" id="log">Pick an animal to start…</div>
+        <div style="display:flex; gap:8px; padding:8px 0">
+          <button class="btn" id="playAgain" style="display:none">Play again</button>
+        </div>
       </div>
     </section>
-
-    <footer>Single file • No libraries • Works on GitHub Pages</footer>
   </div>
 
   <script>
-    // --- State ---
+    // -------- State & helpers --------
     const gallery = document.getElementById('gallery');
     const arena = document.getElementById('arena');
-    const stage = document.getElementById('stage');
-    const fighterLeft = document.getElementById('fighterLeft');
-    const fighterRight = document.getElementById('fighterRight');
+    const fighterLeft = document.querySelector('#fighterLeft img');
+    const fighterRight = document.querySelector('#fighterRight img');
     const hpLeft = document.getElementById('hpLeft');
     const hpRight = document.getElementById('hpRight');
     const log = document.getElementById('log');
+    const countdownEl = document.getElementById('countdown');
+    const confetti = document.getElementById('confetti');
+    const ctx = confetti.getContext('2d');
 
-    let animals = [];// {name, src}
+    let animals = []; // {name, src}
 
-    // --- Utilities ---
     const el = (tag, attrs={}, ...children)=>{ const n=document.createElement(tag); Object.entries(attrs).forEach(([k,v])=>{ if(k=="style"&&typeof v=="object") Object.assign(n.style,v); else if(k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k,v);}); children.flat().forEach(c=> n.appendChild(typeof c==="string"? document.createTextNode(c): c)); return n; };
 
     function addAnimal(src, name){ animals.push({name: name?.trim() || inferName(src), src}); renderGallery(); }
@@ -108,14 +131,14 @@
       gallery.innerHTML='';
       animals.forEach((a,i)=>{
         const card = el('button',{class:'card', onclick:()=> selectAnimal(i)},
-          el('div',{class:'thumb', style:{backgroundImage:`url(${a.src})`}}),
+          el('div',{class:'thumb'}, el('img',{src:a.src, alt:a.name})),
           el('div',{class:'label'}, a.name)
         );
         gallery.appendChild(card);
       });
     }
 
-    // --- Add by URL / File ---
+    // -------- Add by URL / File / Drop --------
     document.getElementById('addUrl').addEventListener('click',()=>{
       const url=document.getElementById('urlInput').value.trim();
       const name=document.getElementById('nameInput').value.trim();
@@ -126,59 +149,106 @@
     });
     const fileInput=document.getElementById('fileInput');
     fileInput.addEventListener('change', handleFiles);
+    window.addEventListener('dragover', e=>{ e.preventDefault(); });
+    window.addEventListener('drop', e=>{ e.preventDefault(); handleFiles({ target:{ files: e.dataTransfer.files }}); });
     function handleFiles(e){
       const files=Array.from(e.target.files||[]);
       files.forEach(f=>{ if(!f.type.startsWith('image/')) return; const r=new FileReader(); r.onload=()=> addAnimal(r.result, f.name.replace(/\.[^.]+$/, '')); r.readAsDataURL(f); });
       fileInput.value='';
     }
 
-    // --- Game (minimal) ---
+    // -------- Game flow with animations --------
     function selectAnimal(index){
       if(animals.length<2){ alert('Add at least two animals.'); return; }
       const p=animals[index];
       let j=index; while(j===index) j=Math.floor(Math.random()*animals.length);
       const o=animals[j];
 
-      // Setup arena immediately (no cage/effects)
       document.getElementById('galleryPanel').style.display='none';
       arena.classList.add('show');
-      fighterLeft.style.backgroundImage=`url(${p.src})`;
-      fighterRight.style.backgroundImage=`url(${o.src})`;
+      document.getElementById('goHome').style.display='inline-block';
+
+      fighterLeft.src=p.src; fighterRight.src=o.src;
       hpLeft.style.width='100%'; hpRight.style.width='100%';
-      startFight(p,o);
+      log.textContent = `${p.name} vs ${o.name}`;
+
+      // fun countdown
+      doCountdown(()=> startFight(p,o));
+    }
+
+    function doCountdown(done){
+      countdownEl.style.display='grid';
+      let n=3; countdownEl.textContent=n;
+      const t=setInterval(()=>{ n--; if(n>0) countdownEl.textContent=n; else { countdownEl.textContent='Go!'; setTimeout(()=>{ countdownEl.style.display='none'; clearInterval(t); done(); },500); } },700);
     }
 
     function startFight(p,o){
-      log.textContent = `${p.name} vs ${o.name} — Fight!`;
-      let L=100, R=100;
+      let L=100, R=100; let turn=0; // 0 left, 1 right
+      const leftBox=document.getElementById('fighterLeft');
+      const rightBox=document.getElementById('fighterRight');
+
       const tick=setInterval(()=>{
-        const leftAttacks = Math.random()<0.5;
         const dmg = 8+Math.floor(Math.random()*13); // 8–20
-        if(leftAttacks){ R=Math.max(0,R-dmg); hpRight.style.width=R+'%'; log.append(`
-${p.name} hits ${o.name} for ${dmg}.`); }
-        else { L=Math.max(0,L-dmg); hpLeft.style.width=L+'%'; log.append(`
-${o.name} strikes ${p.name} for ${dmg}.`); }
-        if(L===0||R===0){ clearInterval(tick); const winner = R===0&&L>0 ? p : (L===0&&R>0 ? o : (Math.random()<0.5?p:o)); log.append(`
-🏆 ${winner.name} wins!`); document.getElementById('playAgain').style.display='inline-block'; document.getElementById('backToGallery').style.display='inline-block'; }
-      }, 800);
+        if(turn===0){ R=Math.max(0,R-dmg); hpRight.style.width=R+'%'; rightBox.style.animation='hit 400ms'; leftBox.style.animation='dashL 450ms'; log.textContent=`${p.name} hits ${o.name} for ${dmg}!`; }
+        else { L=Math.max(0,L-dmg); hpLeft.style.width=L+'%'; leftBox.style.animation='hit 400ms'; rightBox.style.animation='dashR 450ms'; log.textContent=`${o.name} hits ${p.name} for ${dmg}!`; }
+        // reset short animations
+        setTimeout(()=>{ leftBox.style.animation='idle 1.2s ease-in-out infinite'; rightBox.style.animation='idle 1.2s ease-in-out infinite'; },460);
+
+        if(L===0||R===0){
+          clearInterval(tick);
+          const winner = R===0&&L>0 ? p : (L===0&&R>0 ? o : (Math.random()<0.5?p:o));
+          log.textContent = `🏆 ${winner.name} wins!`;
+          burstConfetti();
+          document.getElementById('playAgain').style.display='inline-block';
+        } else { turn = 1 - turn; }
+      }, 900);
     }
 
-    // Buttons
-    document.getElementById('playAgain').addEventListener('click',()=>{ log.textContent='Pick an animal to fight…'; document.getElementById('playAgain').style.display='none'; document.getElementById('backToGallery').style.display='none'; arena.classList.remove('show'); document.getElementById('galleryPanel').style.display='block'; });
-    document.getElementById('backToGallery').addEventListener('click',()=>{ document.getElementById('playAgain').click(); });
-    document.getElementById('resetAll').addEventListener('click',()=>{ if(confirm('Clear all animals and reload defaults?')){ animals=[]; preload(); }});
+    // -------- Buttons --------
+    document.getElementById('playAgain').addEventListener('click',()=>{
+      log.textContent='Pick an animal to start…';
+      document.getElementById('playAgain').style.display='none';
+      document.getElementById('galleryPanel').style.display='block';
+      arena.classList.remove('show');
+      document.getElementById('goHome').style.display='none';
+    });
+    document.getElementById('goHome').addEventListener('click',()=> document.getElementById('playAgain').click());
 
-    // --- Preloaded animals (built-in SVGs so it works offline & on GitHub Pages) ---
-    function svg(text, color){ return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0' stop-color='${color}' stop-opacity='.85'/><stop offset='1' stop-color='${color}' stop-opacity='.45'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><text x='50%' y='54%' text-anchor='middle' font-family='Segoe UI,Arial' font-size='64' fill='white' opacity='.98' font-weight='700'>${text}</text></svg>`)}`; }
+    // -------- Confetti --------
+    function burstConfetti(){
+      resizeConfetti();
+      const pieces=[...Array(150)].map(()=>({
+        x:Math.random()*confetti.width,
+        y:-10,
+        s:6+Math.random()*10,
+        vy:2+Math.random()*3,
+        vx:(Math.random()-.5)*2,
+        rot:Math.random()*Math.PI,
+        color:["#f87171","#fbbf24","#34d399","#60a5fa","#a78bfa"][Math.floor(Math.random()*5)]
+      }));
+      let t=0; const maxT=120;
+      function step(){
+        ctx.clearRect(0,0,confetti.width,confetti.height);
+        pieces.forEach(p=>{ p.vy+=0.02; p.x+=p.vx; p.y+=p.vy; p.rot+=0.1; drawPiece(p); });
+        if(t++<maxT) requestAnimationFrame(step); else ctx.clearRect(0,0,confetti.width,confetti.height);
+      }
+      step();
+    }
+    function drawPiece(p){ ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s); ctx.restore(); }
+    function resizeConfetti(){ confetti.width=confetti.clientWidth; confetti.height=confetti.clientHeight; }
+    window.addEventListener('resize', resizeConfetti);
+
+    // -------- Preloaded animals (bright SVGs as images) --------
+    function svg(text, color, emoji){ return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0' stop-color='${color}' stop-opacity='.95'/><stop offset='1' stop-color='${color}' stop-opacity='.75'/></linearGradient></defs><rect width='100%' height='100%' rx='28' fill='url(#g)'/><text x='50%' y='48%' text-anchor='middle' font-size='120'>${emoji}</text><text x='50%' y='88%' text-anchor='middle' font-family='Comic Sans MS, Segoe UI, Arial' font-size='36' fill='#000' opacity='.7' font-weight='900'>${text}</text></svg>`)}`; }
 
     function preload(){
       const defaults=[
-        {name:'Lion', src: svg('Lion','#f59e0b')},
-        {name:'Tiger', src: svg('Tiger','#ef4444')},
-        {name:'Bear', src: svg('Bear','#22c55e')},
-        {name:'Wolf', src: svg('Wolf','#60a5fa')},
-        {name:'Elephant', src: svg('Elephant','#a78bfa')},
-        {name:'Horse', src: svg('Horse','#f472b6')}
+        {name:'Lion', src: svg('Lion', '#fde047', '🦁')},
+        {name:'Tiger', src: svg('Tiger', '#fb923c', '🐯')},
+        {name:'Bear', src: svg('Bear', '#fca5a5', '🐻')},
+        {name:'Panda', src: svg('Panda', '#c4b5fd', '🐼')},
+        {name:'Elephant', src: svg('Elephant', '#93c5fd', '🐘')},
+        {name:'Monkey', src: svg('Monkey', '#86efac', '🐵')}
       ];
       animals = defaults.slice();
       renderGallery();
