@@ -1,18 +1,24 @@
-<!DOCTYPE html>
+# Retry writing the file after kernel reset
+html = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Animal Run</title>
+
+  <!-- Single-file: HTML + CSS + JS. Drop into your GitHub Pages repo as index.html -->
   <style>
     :root{
-      --sky:#bde0fe; --sky2:#90cdf4; --grass:#84cc16; --ink:#0f172a; --panel:#ffffff;
-      --line:#0c4a6e; --hit:#ef4444; --heal:#22c55e; --bar:#0ea5e9;
+      --sky1:#b3e5ff; --sky2:#6ec1ff; --grass:#78d13f; --ink:#0f172a; --panel:#ffffff;
+      --barL:#22c55e; --barR:#ef4444; --ui:#111827; --rail:#cbd5e1;
+      --accent:#f59e0b;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif; color:var(--ink); background:linear-gradient(var(--sky),var(--sky2))}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif; color:var(--ink);
+      background:linear-gradient(var(--sky1),var(--sky2));}
     .wrap{max-width:1100px; margin:auto; padding:16px; display:flex; flex-direction:column; gap:14px}
+
     header{display:flex; align-items:center; justify-content:space-between; gap:10px}
     h1{margin:0; font-size:28px}
     .btn{cursor:pointer; border:2px solid #0002; background:#ffd166; border-radius:12px; padding:10px 14px; font-weight:700}
@@ -23,50 +29,59 @@
     .controls input{border:2px solid #0002; border-radius:12px; padding:10px; font-size:14px}
 
     /* Gallery */
-    .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; padding:12px}
+    .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; padding:12px}
     .card{border:3px solid #0002; border-radius:16px; padding:8px; cursor:pointer; background:#fff; transition:transform .08s}
     .card:hover{transform:translateY(-2px)}
-    .thumb{width:100%; aspect-ratio:1/1; border-radius:12px; background:#fff; display:grid; place-items:center}
-    .thumb img{width:92%; height:92%; object-fit:cover; border-radius:12px}
+    .thumb{width:100%; aspect-ratio:1/1; border-radius:12px; background:#eef; display:grid; place-items:center; overflow:hidden}
+    .thumb img{width:100%; height:100%; object-fit:cover}
     .label{margin-top:6px; text-align:center; font-weight:700}
 
     /* Arena */
     .arena{display:none}
     .arena.show{display:block}
-    .stage{position:relative; border:3px solid #0002; border-radius:18px; overflow:hidden; min-height:420px; background:linear-gradient(#dbeafe 55%, var(--grass) 0)}
-    .ground{position:absolute; inset:auto 0 0 0; height:45%; background:repeating-linear-gradient(90deg,#7bbf10,#7bbf10 16px,#76b50f 16px,#76b50f 32px)}
+    .stage{position:relative; border:3px solid #0002; border-radius:18px; overflow:hidden; min-height:480px;
+      background:
+        radial-gradient(800px 300px at 50% 15%, #ffffff88, #0000 70%),
+        linear-gradient(#dff2ff 60%, var(--grass) 0);
+    }
+    .ground{position:absolute; inset:auto 0 0 0; height:40%;
+      background:repeating-linear-gradient(90deg,#7cc63a,#7cc63a 16px,#73ba35 16px,#73ba35 32px)}
+    .fighter{position:absolute; bottom:120px; width:240px; height:240px; display:grid; place-items:center; filter:drop-shadow(0 12px 0 #0001)}
+    .fighter img{width:100%; height:100%; object-fit:contain; border-radius:16px; background:#fff}
+    .left{left:6%} .right{right:6%}
 
-    .fighter{position:absolute; bottom:90px; width:210px; height:210px; display:grid; place-items:center; filter:drop-shadow(0 12px 0 #0001)}
-    .fighter img{width:100%; height:100%; object-fit:contain; border-radius:16px}
-    .left{left:6%}
-    .right{right:6%}
-
-    .hpbar{position:absolute; top:12px; width:44%; height:16px; background:#fff; border:3px solid #0002; border-radius:999px; overflow:hidden}
-    .hpbar.left{left:12px}
-    .hpbar.right{right:12px}
-    .hp{height:100%; width:100%; background:linear-gradient(90deg,var(--heal),#bbf7d0)}
-    .hpR{background:linear-gradient(90deg,var(--hit),#fecaca)}
+    /* HP bars + names */
+    .hud{position:absolute; top:12px; left:0; right:0; display:flex; justify-content:space-between; padding:0 12px; gap:12px}
+    .hpbox{flex:1; display:flex; flex-direction:column; gap:6px}
+    .name{font-weight:800; text-shadow:0 1px 0 #fff}
+    .bar{height:16px; background:var(--rail); border:2px solid #0002; border-radius:999px; overflow:hidden}
+    .hp{height:100%; width:100%}
+    .hpL{background:linear-gradient(90deg,var(--barL),#c0f2c9)}
+    .hpR{background:linear-gradient(90deg,var(--barR),#fecaca)}
 
     .vs{position:absolute; top:8px; left:50%; transform:translateX(-50%); background:#fff; border:3px solid #0002; padding:4px 10px; border-radius:999px; font-weight:900}
 
-    .log{margin:10px; padding:10px; border:3px solid #0002; border-radius:14px; background:#fff; min-height:44px}
+    .log{margin:10px; padding:10px; border:3px solid #0002; border-radius:14px; background:#fff; min-height:48px}
 
     /* Cage */
-    .cage{position:absolute; inset:0; display:grid; place-items:center; background:#0000002b;}
-    .bars{position:relative; width:70%; height:70%; border-radius:18px; background:repeating-linear-gradient(90deg, #324051 0 12px, transparent 12px 32px); border:3px solid #475569; box-shadow:inset 0 0 0 3px #0b1220}
+    .cage{position:absolute; inset:0; display:grid; place-items:center; background:#0000002b; z-index:10}
+    .bars{position:relative; width:72%; height:72%; border-radius:18px;
+      background:repeating-linear-gradient(90deg,#364152 0 12px, transparent 12px 32px);
+      border:3px solid #475569; box-shadow:inset 0 0 0 3px #0b1220}
     .door{position:absolute; inset:0; border-radius:18px; background:linear-gradient(180deg,#1f2937,#111827); border-left:4px solid #94a3b8; transform-origin:left;}
-    .cage.open .door{animation:door 1300ms ease forwards}
+    .cage.open .door{animation:door 1200ms ease forwards}
     @keyframes door{to{transform:perspective(700px) rotateY(70deg) translateX(-6%); opacity:.15}}
 
-    /* Motion */
+    /* Run/charge animations */
     @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes runL{0%{transform:translateX(0)} 50%{transform:translateX(160px)} 100%{transform:translateX(0)}}
+    @keyframes runR{0%{transform:translateX(0)} 50%{transform:translateX(-160px)} 100%{transform:translateX(0)}}
+    @keyframes collide{0%{transform:scale(1)} 40%{transform:scale(1.07) rotate(1.2deg)} 100%{transform:scale(1)}}
     .idle{animation:bob 1.1s ease-in-out infinite}
-    @keyframes runL{0%{transform:translateX(0)} 50%{transform:translateX(120px)} 100%{transform:translateX(0)}}
-    @keyframes runR{0%{transform:translateX(0)} 50%{transform:translateX(-120px)} 100%{transform:translateX(0)}}
-    @keyframes collide{0%{transform:scale(1)} 40%{transform:scale(1.05) rotate(2deg)} 100%{transform:scale(1)}}
-    .speed{position:absolute; width:120px; height:4px; background:linear-gradient(90deg,#0000,var(--line)); border-radius:8px; opacity:.6}
 
-    .count{position:absolute; inset:0; display:grid; place-items:center; font-size:110px; font-weight:900; color:#0008; text-shadow:0 4px 0 #fff}
+    /* Countdown + dust + spark layers */
+    .count{position:absolute; inset:0; display:grid; place-items:center; font-size:110px; font-weight:900; color:#0008; text-shadow:0 4px 0 #fff; z-index:8}
+    canvas.layer{position:absolute; inset:0; pointer-events:none; z-index:6}
   </style>
 </head>
 <body>
@@ -81,10 +96,10 @@
 
     <div class="panel controls">
       <input id="nameInput" type="text" placeholder="Animal name (optional)" />
-      <input id="urlInput" type="url" placeholder="Paste image URL (HTTPS)" />
+      <input id="urlInput" type="url" placeholder="Paste image URL (HTTPS) or leave blank to use files" />
       <button class="btn" id="addUrl">Add by URL</button>
       <input id="fileInput" type="file" accept="image/*" multiple />
-      <span style="font-size:12px;opacity:.8">(Tip: add your images, then click "Save as my defaults" so they preload next time.)</span>
+      <span style="font-size:12px;opacity:.8">Tip: upload your photos, then click “Save as my defaults” to preload them next time.</span>
     </div>
 
     <section class="panel" id="galleryPanel">
@@ -93,12 +108,25 @@
 
     <section class="arena" id="arena">
       <div class="stage" id="stage">
-        <div class="hpbar left"><div class="hp" id="hpLeft"></div></div>
-        <div class="hpbar right"><div class="hp hpR" id="hpRight"></div></div>
+        <div class="hud">
+          <div class="hpbox">
+            <div class="name" id="nameL">Player</div>
+            <div class="bar"><div class="hp hpL" id="hpLeft"></div></div>
+          </div>
+          <div class="hpbox" style="text-align:right">
+            <div class="name" id="nameR">Opponent</div>
+            <div class="bar"><div class="hp hpR" id="hpRight"></div></div>
+          </div>
+        </div>
         <div class="vs">VS</div>
         <div class="fighter left idle" id="boxL"><img id="imgL" alt="left animal"/></div>
         <div class="fighter right idle" id="boxR"><img id="imgR" alt="right animal"/></div>
+        <canvas class="layer" id="dust"></canvas>
+        <canvas class="layer" id="sparks"></canvas>
         <div class="ground"></div>
+        <div class="cage" id="cage" style="display:none">
+          <div class="bars"><div class="door"></div></div>
+        </div>
         <div class="count" id="countdown" style="display:none">3</div>
       </div>
       <div class="log" id="log">Pick an animal to start…</div>
@@ -109,16 +137,19 @@
   </div>
 
   <script>
-    // ---------- Configuration: put YOUR animal URLs here to preload ----------
-    // If you click "Save as my defaults", we'll store your current list in localStorage
+    // ---- PRELOAD YOUR REPO IMAGES HERE -------------------------------------
+    // Put your files in assets/animals/ (repo) and rename below to match exactly.
+    // Example direct path on GitHub Pages: /animal-run/assets/animals/lion.jpg
     const PRELOADED = [
-      {name:'Lion', src: svg('Lion','#fde047','🦁')},
-      {name:'Tiger', src: svg('Tiger','#fb923c','🐯')},
-      {name:'Elephant', src: svg('Elephant','#93c5fd','🐘')},
-      {name:'Panda', src: svg('Panda','#c4b5fd','🐼')}
-      // Example real photo URL: {name:'Cheetah', src:'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=800'}
+      { name: 'Lion',     src: 'assets/animals/lion.jpg' },
+      { name: 'Tiger',    src: 'assets/animals/tiger.jpg' },
+      { name: 'Elephant', src: 'assets/animals/elephant.jpg' },
+      { name: 'Zebra',    src: 'assets/animals/zebra.jpg' },
+      { name: 'Bear',     src: 'assets/animals/bear.jpg' }
     ];
+    // ------------------------------------------------------------------------
 
+    // Elements
     const gallery = document.getElementById('gallery');
     const arena = document.getElementById('arena');
     const stage = document.getElementById('stage');
@@ -126,123 +157,129 @@
     const imgR = document.getElementById('imgR');
     const boxL = document.getElementById('boxL');
     const boxR = document.getElementById('boxR');
+    const nameL = document.getElementById('nameL');
+    const nameR = document.getElementById('nameR');
     const hpLeft = document.getElementById('hpLeft');
     const hpRight = document.getElementById('hpRight');
     const countdownEl = document.getElementById('countdown');
     const log = document.getElementById('log');
+    const cage = document.getElementById('cage');
+    const dust = document.getElementById('dust');
+    const sparks = document.getElementById('sparks');
+    const dctx = dust.getContext('2d');
+    const sctx = sparks.getContext('2d');
 
+    // State
     let animals = [];
+    const LSK = 'animalrun.defaults.v2';
 
-    const el = (t,a={},...c)=>{const n=document.createElement(t);Object.entries(a).forEach(([k,v])=>{if(k==='style'&&typeof v==='object')Object.assign(n.style,v);else if(k.startsWith('on'))n.addEventListener(k.slice(2),v);else n.setAttribute(k,v)});c.flat().forEach(x=>n.appendChild(typeof x==='string'?document.createTextNode(x):x));return n}
+    // Helpers
+    const el = (t,a={},...c)=>{const n=document.createElement(t);Object.entries(a).forEach(([k,v])=>{if(k==='style'&&typeof v==='object')Object.assign(n.style,v);else if(k.startsWith('on'))n.addEventListener(k.slice(2),v);else n.setAttribute(k,v)});c.flat().forEach(x=>n.appendChild(typeof x==='string'?document.createTextNode(x):x));return n};
+    function addAnimal(src,name){ animals.push({name:name?.trim()||infer(src),src}); renderGallery(); }
+    function infer(src){ try{ const u=new URL(src, location.href); const f=u.pathname.split('/').pop(); return (f?.split('.')?.[0]||'Animal').replace(/[-_]/g,' ');} catch{ return 'Animal'; } }
+    function renderGallery(){ gallery.innerHTML=''; animals.forEach((a,i)=>{
+      gallery.appendChild(el('button',{class:'card',onclick:()=>selectAnimal(i)},
+        el('div',{class:'thumb'}, el('img',{src:a.src,alt:a.name})), el('div',{class:'label'}, a.name))); }); }
 
-    function addAnimal(src,name){animals.push({name:name?.trim()||infer(src),src});renderGallery()}
-    function infer(src){try{const u=new URL(src);const f=u.pathname.split('/').pop();return (f?.split('.')?.[0]||'Animal').replace(/[-_]/g,' ')}catch{return 'Animal'}}
-
-    function renderGallery(){
-      gallery.innerHTML='';
-      animals.forEach((a,i)=>{
-        gallery.appendChild(el('button',{class:'card',onclick:()=>selectAnimal(i)},
-          el('div',{class:'thumb'}, el('img',{src:a.src,alt:a.name})),
-          el('div',{class:'label'}, a.name)
-        ))
-      })
-    }
-
-    // ---- Add images by URL / file ----
+    // Add by URL / file
     document.getElementById('addUrl').addEventListener('click',()=>{
       const url=document.getElementById('urlInput').value.trim();
       const name=document.getElementById('nameInput').value.trim();
       if(!url) return alert('Paste an image URL first.');
       addAnimal(url,name||undefined);
-      document.getElementById('urlInput').value='';
-      document.getElementById('nameInput').value='';
-    })
+      document.getElementById('urlInput').value=''; document.getElementById('nameInput').value='';
+    });
     const fileInput=document.getElementById('fileInput');
     fileInput.addEventListener('change',e=>{
       const files=[...e.target.files];
-      files.forEach(f=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=()=>addAnimal(r.result,f.name.replace(/\.[^.]+$/,''));r.readAsDataURL(f)});
+      files.forEach(f=>{ if(!f.type.startsWith('image/'))return; const r=new FileReader();
+        r.onload=()=> addAnimal(r.result, f.name.replace(/\.[^.]+$/, '')); r.readAsDataURL(f); });
       fileInput.value='';
-    })
+    });
 
-    // ---- Save defaults ----
+    // Save defaults (localStorage)
     document.getElementById('saveDefaults').addEventListener('click',()=>{
-      localStorage.setItem('animalrun.defaults', JSON.stringify(animals));
-      alert('Saved! These animals will preload next time.');
-    })
+      try{ localStorage.setItem(LSK, JSON.stringify(animals)); alert('Saved! These animals will preload next time.'); }
+      catch(e){ alert('Could not save defaults in this browser.'); }
+    });
 
-    // ---- Game flow with "real" cage escape and charges ----
+    // Select + flow with cage + run + fight
     function selectAnimal(index){
-      if(animals.length<2){alert('Add at least two animals.');return}
-      const p=animals[index];
-      let j=index; while(j===index) j=Math.floor(Math.random()*animals.length);
-      const o=animals[j];
+      if(animals.length<2){ alert('Add at least two animals.'); return; }
+      const p=animals[index]; let j=index; while(j===index) j=Math.floor(Math.random()*animals.length); const o=animals[j];
 
       document.getElementById('galleryPanel').style.display='none';
-      arena.classList.add('show');
-      document.getElementById('goHome').style.display='inline-block';
+      arena.classList.add('show'); document.getElementById('goHome').style.display='inline-block';
 
-      imgL.src=p.src; imgR.src=o.src;
+      imgL.src=p.src; imgR.src=o.src; nameL.textContent=p.name; nameR.textContent=o.name;
       hpLeft.style.width='100%'; hpRight.style.width='100%';
       log.textContent = `${p.name} is trapped in a cage…`;
 
-      // Build cage overlay over left fighter
-      const cage = el('div',{class:'cage',id:'cage'}, el('div',{class:'bars'}, el('div',{class:'door'})));
-      stage.appendChild(cage);
-
-      // Open door, then run out, then fight
-      setTimeout(()=>{ cage.classList.add('open'); }, 900);
-      setTimeout(()=>{
-        cage.remove();
-        // left animal runs forward visibly
-        runOnce(boxL,'L',()=> countdown(()=> startFight(p,o)));
-      }, 2400);
-    }
-
-    function runOnce(node,dir='L',done){
-      // add speed lines for fun
-      const s = el('div',{class:'speed'}); stage.appendChild(s); s.style.top = (node.offsetTop+node.offsetHeight/2)+'px'; s.style.left = (dir==='L'? (node.offsetLeft+30)+'px' : (node.offsetLeft-120)+'px');
-      node.style.animation = dir==='L'? 'runL 700ms ease' : 'runR 700ms ease';
-      setTimeout(()=>{ node.style.animation='bob 1.1s ease-in-out infinite'; s.remove(); done&&done(); },720);
+      cage.style.display='grid'; // show cage
+      setTimeout(()=> cage.classList.add('open'), 700); // open door
+      setTimeout(()=>{ // remove cage and run out
+        cage.classList.remove('open'); cage.style.display='none';
+        runWithDust(boxL,'L', ()=> countdown(()=> startFight(p,o)));
+      }, 2100);
     }
 
     function countdown(done){
-      countdownEl.style.display='grid';
-      let n=3; countdownEl.textContent=n;
-      const t=setInterval(()=>{ n--; if(n>0) countdownEl.textContent=n; else { countdownEl.textContent='Go!'; setTimeout(()=>{ countdownEl.style.display='none'; clearInterval(t); done(); },500);} },650);
+      countdownEl.style.display='grid'; let n=3; countdownEl.textContent=n;
+      const t=setInterval(()=>{ n--; if(n>0) countdownEl.textContent=n; else { countdownEl.textContent='Go!'; setTimeout(()=>{ countdownEl.style.display='none'; clearInterval(t); done(); },550);} },650);
     }
 
     function startFight(p,o){
       boxL.classList.add('idle'); boxR.classList.add('idle');
-      let L=100,R=100; let turn=0; // 0 left, 1 right
+      let L=100, R=100; let turn=0;
       const tick=setInterval(()=>{
         const dmg = 8+Math.floor(Math.random()*13);
         if(turn===0){
-          // left charges, collide at center, right loses HP
-          charge(boxL,'L');
-          R=Math.max(0,R-dmg); hpRight.style.width=R+'%';
-          log.textContent=`${p.name} hits ${o.name} for ${dmg}!`;
-        } else {
-          charge(boxR,'R');
-          L=Math.max(0,L-dmg); hpLeft.style.width=L+'%';
-          log.textContent=`${o.name} hits ${p.name} for ${dmg}!`;
+          charge(boxL,'L'); impactSparks(); R=Math.max(0,R-dmg); hpRight.style.width=R+'%'; log.textContent=`${p.name} hits ${o.name} for ${dmg}!`;
+        }else{
+          charge(boxR,'R'); impactSparks(); L=Math.max(0,L-dmg); hpLeft.style.width=L+'%'; log.textContent=`${o.name} hits ${p.name} for ${dmg}!`;
         }
-        if(L===0||R===0){
-          clearInterval(tick);
-          const winner = R===0&&L>0? p : (L===0&&R>0? o : (Math.random()<.5?p:o));
-          log.textContent = `🏆 ${winner.name} wins!`;
-          document.getElementById('playAgain').style.display='inline-block';
-        } else { turn = 1 - turn; }
+        if(L===0||R===0){ clearInterval(tick); const winner = R===0&&L>0? p : (L===0&&R>0? o : (Math.random()<.5?p:o));
+          log.textContent = `🏆 ${winner.name} wins!`; document.getElementById('playAgain').style.display='inline-block'; }
+        else{ turn = 1 - turn; }
       }, 1100);
+    }
+
+    // Animations + particles
+    function runWithDust(node,dir,done){
+      resizeLayers();
+      const parts=[...Array(40)].map(()=>({x:dir==='L'? node.offsetLeft+node.offsetWidth: node.offsetLeft, y:node.offsetTop+node.offsetHeight-10, vx:(Math.random()-0.5)*2, vy:-Math.random()*2-1, s:2+Math.random()*3, a:1 }));
+      let t=0;
+      const dustTick=()=>{
+        dctx.clearRect(0,0,dust.width,dust.height);
+        parts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.a-=0.02; dctx.fillStyle=`rgba(160,140,110,${Math.max(p.a,0)})`; dctx.beginPath(); dctx.arc(p.x,p.y,p.s,0,Math.PI*2); dctx.fill(); });
+        if(t++<50) requestAnimationFrame(dustTick);
+      };
+      dustTick();
+      node.style.animation = (dir==='L'? 'runL':'runR') + ' 700ms ease';
+      setTimeout(()=>{ node.style.animation='bob 1.1s ease-in-out infinite'; done&&done(); },720);
     }
 
     function charge(node,dir){
       node.classList.remove('idle');
-      // move towards center then bounce back
-      node.style.animation = (dir==='L'? 'runL' : 'runR') + ' 600ms ease';
-      // impact wobble on both
-      boxL.style.animation = 'collide 400ms'; boxR.style.animation='collide 400ms';
+      node.style.animation = (dir==='L'? 'runL':'runR') + ' 600ms ease';
+      boxL.style.animation='collide 420ms'; boxR.style.animation='collide 420ms';
       setTimeout(()=>{ boxL.style.animation='bob 1.1s ease-in-out infinite'; boxR.style.animation='bob 1.1s ease-in-out infinite'; },420);
     }
+
+    function impactSparks(){
+      resizeLayers();
+      const cx = stage.clientWidth/2, cy = stage.clientHeight*0.55;
+      const parts=[...Array(24)].map(()=>({x:cx, y:cy, vx:(Math.random()-0.5)*6, vy:(Math.random()-0.5)*4, a:1, s:2+Math.random()*2, c:["#f87171","#fde047","#34d399","#60a5fa","#a78bfa"][Math.floor(Math.random()*5)] }));
+      let t=0;
+      const step=()=>{
+        sctx.clearRect(0,0,sparks.width,sparks.height);
+        parts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vx*=0.96; p.vy*=0.96; p.a-=0.02; sctx.fillStyle=`${p.c}AA`; sctx.beginPath(); sctx.arc(p.x,p.y,p.s,0,Math.PI*2); sctx.fill(); });
+        if(t++<40) requestAnimationFrame(step); else sctx.clearRect(0,0,sparks.width,sparks.height);
+      };
+      step();
+    }
+
+    function resizeLayers(){ [dust,sparks].forEach(c=>{ c.width = stage.clientWidth; c.height = stage.clientHeight; }); }
 
     // Buttons
     document.getElementById('playAgain').addEventListener('click',()=>{
@@ -251,22 +288,25 @@
       document.getElementById('galleryPanel').style.display='block';
       arena.classList.remove('show');
       document.getElementById('goHome').style.display='none';
-    })
-    document.getElementById('goHome').addEventListener('click',()=> document.getElementById('playAgain').click())
+    });
+    document.getElementById('goHome').addEventListener('click',()=> document.getElementById('playAgain').click());
 
-    // Confetti-free for now to keep perf light for kids devices
-
-    // Preload helpers
-    function svg(text,color,emoji){return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><defs><linearGradient id='g' x1='0' x2='0' y1='0' y2='1'><stop offset='0' stop-color='${color}' stop-opacity='.95'/><stop offset='1' stop-color='${color}' stop-opacity='.75'/></linearGradient></defs><rect width='100%' height='100%' rx='28' fill='url(#g)'/><text x='50%' y='48%' text-anchor='middle' font-size='120'>${emoji}</text><text x='50%' y='88%' text-anchor='middle' font-family='Comic Sans MS, Segoe UI, Arial' font-size='36' fill='#000' opacity='.7' font-weight='900'>${text}</text></svg>`)};}
-
+    // Load defaults (localStorage or PRELOADED)
     function loadDefaults(){
-      const saved = localStorage.getItem('animalrun.defaults');
-      animals = saved ? JSON.parse(saved) : PRELOADED.slice();
+      try{
+        const saved = localStorage.getItem(LSK);
+        animals = saved ? JSON.parse(saved) : PRELOADED.slice();
+      }catch{ animals = PRELOADED.slice(); }
       renderGallery();
     }
 
-    // init
+    // Init
     loadDefaults();
+    window.addEventListener('resize', resizeLayers);
   </script>
 </body>
 </html>
+"""
+with open("/mnt/data/AnimalRun_index.html","w") as f:
+    f.write(html)
+"/mnt/data/AnimalRun_index.html"
