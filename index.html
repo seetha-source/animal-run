@@ -128,6 +128,7 @@
       { name: 'Velociraptor', src: 'assets/animals/Velociraptor.jpeg' }
     ];
 
+    // ---- ELEMENTS ----
     const gallery = document.getElementById('gallery');
     const arena = document.getElementById('arena');
     const imgL = document.getElementById('imgL');
@@ -142,7 +143,7 @@
     const log = document.getElementById('log');
     const soundToggle = document.getElementById('soundToggle');
 
-    // ---- SOUND ENGINE ----
+    // ---- SOUND ENGINE (original cues) ----
     class Sound {
       constructor() {
         this.ctx = null;
@@ -200,17 +201,22 @@
     const S = new Sound();
     soundToggle.addEventListener('change', e=> S.setEnabled(e.target.checked));
 
-    // ---- GAMEPLAY LOGIC ----
+    // ---- STATE ----
     let animals = PRELOADED.slice();
 
+    // ---- HELPERS ----
     const el = (t,a={},...c)=>{const n=document.createElement(t);Object.entries(a).forEach(([k,v])=>{if(k==='style'&&typeof v==='object')Object.assign(n.style,v);else if(k.startsWith('on'))n.addEventListener(k.slice(2),v);else n.setAttribute(k,v)});c.flat().forEach(x=>n.appendChild(typeof x==='string'?document.createTextNode(x):x));return n};
 
-    function renderGallery(){ gallery.innerHTML=''; animals.forEach((a,i)=>{
-      gallery.appendChild(el('button',{class:'card',onclick:()=>selectAnimal(i)},
-        el('div',{class:'thumb'}, el('img',{src:a.src,alt:a.name})),
-        el('div',{class:'label'}, a.name)) );
-    }); }
+    function renderGallery(){
+      gallery.innerHTML='';
+      animals.forEach((a,i)=>{
+        gallery.appendChild(el('button',{class:'card',onclick:()=>selectAnimal(i)},
+          el('div',{class:'thumb'}, el('img',{src:a.src,alt:a.name})),
+          el('div',{class:'label'}, a.name)) );
+      });
+    }
 
+    // ---- GAME FLOW ----
     function selectAnimal(index){
       if(animals.length<2){ alert('Add at least two animals.'); return; }
       const p=animals[index]; let j=index; while(j===index) j=Math.floor(Math.random()*animals.length); const o=animals[j];
@@ -244,4 +250,37 @@
           charge(boxR,'R'); S.hit();
           L=Math.max(0,L-dmg); hpLeft.style.width=L+'%'; log.textContent=`${o.name} hits ${p.name} for ${dmg}!`;
         }
-        if(L===0||R===0){ clearInterval(tick); const winner = R===0&&
+        if(L===0||R===0){
+          clearInterval(tick);
+          const winner = R===0 && L>0 ? p : (L===0 && R>0 ? o : (Math.random()<.5?p:o));
+          log.textContent = `🏆 ${winner.name} wins!`;
+          S.win();
+          document.getElementById('playAgain').style.display='inline-block';
+        } else {
+          turn = 1 - turn;
+        }
+      }, 1100);
+    }
+
+    function charge(node,dir){
+      node.classList.remove('idle');
+      node.style.animation = (dir==='L'? 'runL':'runR') + ' 600ms ease';
+      boxL.style.animation='collide 420ms'; boxR.style.animation='collide 420ms';
+      setTimeout(()=>{ boxL.style.animation='bob 1.1s ease-in-out infinite'; boxR.style.animation='bob 1.1s ease-in-out infinite'; },420);
+    }
+
+    // ---- NAV ----
+    document.getElementById('playAgain').addEventListener('click',()=>{
+      log.textContent='Pick an animal to start…';
+      document.getElementById('playAgain').style.display='none';
+      document.getElementById('galleryPanel').style.display='block';
+      arena.classList.remove('show');
+      document.getElementById('goHome').style.display='none';
+    });
+    document.getElementById('goHome').addEventListener('click',()=> document.getElementById('playAgain').click());
+
+    // ---- INIT ----
+    renderGallery();
+  </script>
+</body>
+</html>
